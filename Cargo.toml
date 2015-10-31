@@ -1,4 +1,13 @@
 [package]
+
 name = "iptables-init"
+description = "YAML files as iptables configuration sources"
+license = "MIT"
+readme = "README.md"
+keywords = ["iptables", "yaml", "command-line", "configuration"]
+homepage = "https://github.com/samuelngs/iptables-init"
 version = "1.0.0"
 authors = ["Samuel <sam@infinitely.io>"]
+
+[dependencies]
+clap = "1.4.6"
