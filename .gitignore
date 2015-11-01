@@ -12,3 +12,6 @@
 
 # Cargo files
 Cargo.lock
+
+# OSX Files
+.DS_Store
