@@ -1,13 +1,15 @@
 filter:
-  input: DROP
-  forward: DROP
-  output: ACCEPT
+  input: drop
+  forward: drop
+  output: accept
 web:
   ports:
     - port: 80
       allow: true
     - port: 443
       allow: true
+    - port: 8080
+      forward: 443
 mysql:
   ports:
     - port: 3306
