@@ -46,7 +46,7 @@ fn print_license() {
     let s:String = "
 The MIT License (MIT)
 
-Copyright (c) 2015 Samuel
+Copyright (c) 2015 Samuel <sam@infinitely.io>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the \"Software\"), to deal
