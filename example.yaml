@@ -1,0 +1,4 @@
+global:
+    - INPUT     : false
+      OUTPUT    : false
+      FORWARD   : false
