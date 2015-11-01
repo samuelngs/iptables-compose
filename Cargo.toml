@@ -11,3 +11,4 @@ authors = ["Samuel <sam@infinitely.io>"]
 
 [dependencies]
 clap = "1.4.6"
+yaml-rust = "0.2.2"
