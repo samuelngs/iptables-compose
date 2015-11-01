@@ -1,11 +1,11 @@
 [package]
 
-name = "iptables-init"
+name = "iptables-compose"
 description = "YAML files as iptables configuration sources"
 license = "MIT"
 readme = "README.md"
 keywords = ["iptables", "yaml", "command-line", "configuration"]
-homepage = "https://github.com/samuelngs/iptables-init"
+homepage = "https://github.com/samuelngs/iptables-compose"
 version = "1.0.0"
 authors = ["Samuel <sam@infinitely.io>"]
 
