@@ -1,4 +1,22 @@
-global:
-    - INPUT     : false
-      OUTPUT    : false
-      FORWARD   : false
+filter:
+  input: DROP
+  forward: DROP
+  output: ACCEPT
+web:
+  ports:
+    - port: 80
+      allow: true
+    - port: 443
+      allow: true
+mysql:
+  ports:
+    - port: 3306
+      allow: false
+openvpn:
+  ports:
+    - port: 1194
+      protocol: udp
+      allow: true
+      subnet:
+        - "10.7.0.0/24"
+        - "10.8.0.0/24"
