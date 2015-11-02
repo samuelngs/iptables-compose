@@ -18,7 +18,7 @@ use yaml_rust::{Yaml, YamlLoader};
 fn main() {
 
     let app = App::new("iptables-compose")
-        .version("1.0.0")
+        .version("1.1.0")
         .global_version(true)
         .unified_help_message(true)
         .arg_required_else_help(true)

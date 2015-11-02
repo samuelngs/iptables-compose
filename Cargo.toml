@@ -6,7 +6,7 @@ license = "MIT"
 readme = "README.md"
 keywords = ["iptables", "yaml", "command-line", "configuration"]
 homepage = "https://github.com/samuelngs/iptables-compose"
-version = "1.0.0"
+version = "1.1.0"
 authors = ["Samuel <sam@infinitely.io>"]
 
 [dependencies]
