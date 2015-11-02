@@ -24,20 +24,25 @@ fn main() {
         .arg_required_else_help(true)
         .about("\nYAML files as iptables configuration sources")
         .arg(Arg::with_name("CONFIG")
-             .multiple(true)
-             .short("c")
-             .long("config")
-             .help("yaml file as iptables configuration source\n")
+             .multiple(false)
+             .help("yaml file as iptables configuration source")
              .conflicts_with("license")
-             .takes_value(true))
+             .index(1))
+        .arg(Arg::with_name("RESET")
+             .short("r")
+             .long("reset")
+             .help("reset iptables rules\n")
+             .requires("CONFIG"))
         .args_from_usage("-l --license 'Prints License'");
 
     let matches = app.get_matches();
 
-    if let Some(ref f_paths) = matches.values_of("CONFIG") {
-        for f_path in f_paths.iter() {
-            read_yaml(f_path);
+    if let Some(ref f_path) = matches.value_of("CONFIG") {
+        // Reset rules if "reset" argument is present
+        if matches.is_present("RESET") {
+            reset_rules();
         }
+        read_yaml(f_path);
     }
 
     if matches.is_present("license") {
@@ -128,8 +133,6 @@ fn read_yaml(f_path: &str) {
 }
 
 fn parse_yaml(doc: &Yaml) {
-    // Reset all rules
-    reset_rules();
     // Read all rules from yaml
     match doc {
         // Parse if template data is a hash object
@@ -137,9 +140,9 @@ fn parse_yaml(doc: &Yaml) {
             for (k, v) in h {
                 match k.as_str().unwrap() {
                     // Parse `filter` rules
-                    "filter" | "FILTER" => parse_filter(k, v),
+                    "filter" | "FILTER" => parse_filter(v),
                     // Parse custom section
-                    _ => parse_section(k, v)
+                    _ => parse_section(v)
                 }
             }
         },
@@ -151,22 +154,18 @@ fn parse_yaml(doc: &Yaml) {
 }
 
 fn reset_rules() {
-    let mut s:String = "# reset all rules".to_string();
-    s.push_str("\niptables -F");
-    s.push_str("\niptables -t nat -F");
-    s.push_str("\niptables -t mangle -F");
+    let mut s:String = "iptables -F".to_string();
     s.push_str("\niptables -X");
-    s.push_str("\n# defaults settings and accepts your current connection");
-    s.push_str("\niptables -t nat -A POSTROUTING -j MASQUERADE");
-    s.push_str("\niptables -A INPUT -i lo -j ACCEPT");
-    s.push_str("\niptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT");
+    s.push_str("\niptables -t nat -F");
+    s.push_str("\niptables -t nat -X");
+    s.push_str("\niptables -t mangle -F");
+    s.push_str("\niptables -t mangle -X");
     println!("{}", s);
 }
 
-fn parse_section(id: &Yaml, doc: &Yaml) {
+fn parse_section(doc: &Yaml) {
     match doc {
         &Yaml::Hash(ref h) => {
-            println!("# {} rules", id.as_str().unwrap());
             for (k, v) in h {
                 let k = k.as_str().unwrap();
                 match k {
@@ -293,11 +292,10 @@ fn parse_port_item(doc: &Yaml) {
     }
 }
 
-fn parse_filter(id: &Yaml, doc: &Yaml) {
+fn parse_filter(doc: &Yaml) {
     // Check if filter section exists
     match doc {
         &Yaml::Hash(ref h) => {
-            println!("# {} rules", id.as_str().unwrap());
             for (k, v) in h {
                 let k = k.as_str().unwrap();
                 let v = v.as_str().unwrap();
