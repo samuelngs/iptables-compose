@@ -16,14 +16,17 @@ use yaml_rust::{Yaml, YamlLoader};
 
 fn main() {
 
-    let app = App::new("iptables-init")
+    let app = App::new("iptables-compose")
         .version("1.0.0")
+        .global_version(true)
+        .unified_help_message(true)
+        .arg_required_else_help(true)
         .about("\nYAML files as iptables configuration sources")
         .arg(Arg::with_name("CONFIG")
              .multiple(true)
              .short("c")
              .long("config")
-             .help("yaml file as iptables configuration source")
+             .help("yaml file as iptables configuration source\n")
              .conflicts_with("license")
              .takes_value(true))
         .args_from_usage("-l --license 'Prints License'");
@@ -161,11 +164,31 @@ fn parse_section(id: &Yaml, doc: &Yaml) {
             println!("# {} rules", id.as_str().unwrap());
             for (k, v) in h {
                 let k = k.as_str().unwrap();
-                println!("{:?} - {:?}", k, v);
+                match k {
+                    "ports" | "PORTS" => parse_ports(v),
+                    _ => {
+                        println!("Rules \"{}\" is not available", k);
+                        exit(1);
+                    }
+                }
             }
         },
         _ => {
             println!("Configuration template format is invalid");
+            exit(1);
+        }
+    }
+}
+
+fn parse_ports(doc: &Yaml) {
+    match doc {
+        &Yaml::Array(ref v) => {
+            for x in v {
+                println!("{:?}", x);
+            }
+        },
+        _ => {
+            println!("Configuration \"ports\" format is invalid");
             exit(1);
         }
     }
