@@ -11,37 +11,38 @@ web:
   ports:
     - port: 80
       allow: true
+      subnet:
+        - "10.1.0.0/24"
+        - "10.2.0.0/24"
     - port: 443
       allow: true
+      subnet:
+        - "10.1.0.0/24"
+        - "10.2.0.0/24"
     - port: 8080
       forward: 443
-mysql:
-  ports:
-    - port: 3306
-      allow: false
 openvpn:
   ports:
     - port: 1194
       protocol: udp
       allow: true
-      subnet:
-        - "10.7.0.0/24"
-        - "10.8.0.0/24"
 ```
 ##### Result
 ```
-$ ./iptables-compose example.yaml
+$ ./iptables-compose example.yaml --reset
 ```
 ```
+iptables -F
+iptables -X
+iptables -t nat -F
+iptables -t nat -X
+iptables -t mangle -F
+iptables -t mangle -X
 iptables -P FORWARD DROP
 iptables -P INPUT DROP
 iptables -P OUTPUT ACCEPT
-iptables -A INPUT -i lo -j ACCEPT
-iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
-iptables -I INPUT -p tcp -m tcp --dport 3306 -j DROP
-iptables -I INPUT -s 10.7.0.0/24 -s 10.8.0.0/24 -p udp -m udp --dport 1194 -j ACCEPT
-iptables -I INPUT -p tcp -m tcp --dport 80 -j ACCEPT
-iptables -I INPUT -p tcp -m tcp --dport 443 -j ACCEPT
+iptables -I INPUT -p udp -m udp --dport 1194 -j ACCEPT
+iptables -I INPUT -s 10.1.0.0/24 -s 10.2.0.0/24 -p tcp -m tcp --dport 80 -j ACCEPT
+iptables -I INPUT -s 10.1.0.0/24 -s 10.2.0.0/24 -p tcp -m tcp --dport 443 -j ACCEPT
 iptables -t nat -A PREROUTING -p tcp -m tcp --dport 8080 -j REDIRECT --to-port 443
-iptables -t nat -A POSTROUTING -j MASQUERADE
 ```
