@@ -2,8 +2,9 @@
 // YAML files as iptables configuration sources
 
 // Rust Core
-use std::io::Read;
+use std::ascii::AsciiExt;
 use std::fs::File;
+use std::io::Read;
 use std::path::Path;
 use std::process::exit;
 
@@ -155,6 +156,10 @@ fn reset_rules() {
     s.push_str("\niptables -t nat -F");
     s.push_str("\niptables -t mangle -F");
     s.push_str("\niptables -X");
+    s.push_str("\n# defaults settings and accepts your current connection");
+    s.push_str("\niptables -t nat -A POSTROUTING -j MASQUERADE");
+    s.push_str("\niptables -A INPUT -i lo -j ACCEPT");
+    s.push_str("\niptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT");
     println!("{}", s);
 }
 
@@ -184,11 +189,105 @@ fn parse_ports(doc: &Yaml) {
     match doc {
         &Yaml::Array(ref v) => {
             for x in v {
-                println!("{:?}", x);
+                parse_port_item(x);
             }
         },
         _ => {
             println!("Configuration \"ports\" format is invalid");
+            exit(1);
+        }
+    }
+}
+
+fn parse_port_item(doc: &Yaml) {
+    match doc {
+        &Yaml::Hash(_) => {
+            if doc["port"].is_badvalue() {
+                println!("Port is not defined");
+            }
+            let port = doc["port"].as_i64();
+            match port {
+                Some(port) if port > -1 => (),
+                _ => {
+                    if port.unwrap() <= -1 {
+                        println!("Port has to be greater or equals to 0");
+                    } else {
+                        println!("Port is not invalid");
+                    }
+                    exit(1);
+                }
+            }
+            let mut cmd:String = "iptables".to_string();
+            if ! doc["forward"].is_badvalue() {
+                cmd.push_str(" -t nat -A PREROUTING");
+            } else {
+                let direction = doc["type"].as_str().unwrap_or("input");
+                match direction {
+                    "input" | "output" | "forward" | "INPUT" | "OUTPUT" | "FORWARD" => {
+                        cmd.push_str(" -I ");
+                        cmd.push_str(&direction.to_ascii_uppercase());
+                    },
+                    _ => {
+                        println!("Direction value is invalid");
+                        exit(1);
+                    }
+                }
+            }
+            match doc["subnet"] {
+                Yaml::Array(ref v) => {
+                    for x in v {
+                        cmd.push_str(" -s ");
+                        cmd.push_str(x.as_str().unwrap_or("0.0.0.0/0"));
+                    }
+                },
+                _ => {}
+            }
+            let protocol = doc["protocol"].as_str().unwrap_or("tcp");
+            match protocol {
+                "tcp" | "udp" | "TCP" | "UDP" => {
+                    cmd.push_str(" -p ");
+                    cmd.push_str(protocol);
+                    cmd.push_str(" -m ");
+                    cmd.push_str(protocol);
+                },
+                _ => {
+                    println!("Protocol value is invalid");
+                    exit(1);
+                }
+            }
+            cmd.push_str(" --dport ");
+            cmd.push_str(&port.unwrap().to_string());
+            if ! doc["forward"].is_badvalue() {
+                let forward = doc["forward"].as_i64();
+                match forward {
+                    Some(forward) if forward > -1 => (),
+                    _ => {
+                        if forward.unwrap() <= -1 {
+                            println!("forward port has to be greater or equals to 0");
+                        } else {
+                            println!("forward port is not invalid");
+                        }
+                        exit(1);
+                    }
+                }
+                cmd.push_str(" -j REDIRECT --to-port ");
+                cmd.push_str(&forward.unwrap().to_string());
+            } else {
+                let allow = doc["allow"].as_bool().unwrap_or(true);
+                cmd.push_str(" -j ");
+                match allow {
+                    true => {
+                        cmd.push_str("ACCEPT");
+                    },
+                    _ => {
+                        cmd.push_str("DROP");
+                    }
+                }
+            }
+            println!("{}", cmd);
+        },
+        _ => {
+            println!("Configuration \"ports\" item format is invalid");
             exit(1);
         }
     }
@@ -205,14 +304,14 @@ fn parse_filter(id: &Yaml, doc: &Yaml) {
                 match k {
                     "input" | "output" | "forward" | "INPUT" | "OUTPUT" | "FORWARD" => {
                         match v {
-                            "drop" | "reject" | "accept" | "DROP" | "REJECT" | "ACCEPT" => println!("iptables -P {} {}", k, v),
+                            "drop" | "reject" | "accept" | "DROP" | "REJECT" | "ACCEPT" => println!("iptables -P {} {}", k.to_ascii_uppercase(), v.to_ascii_uppercase()),
                             _ => {
                                 println!("Rules \"{}\" only accept options of \"drop\",\"reject\" or \"accept\"", k);
                                 exit(1);
                             }
                         }
                     },
-                    _ => println!("iptables -P {}", k)
+                    _ => println!("iptables -P {}", k.to_ascii_uppercase())
                 }
             }
         },
