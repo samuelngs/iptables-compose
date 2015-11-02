@@ -6,19 +6,18 @@ web:
   ports:
     - port: 80
       allow: true
+      subnet:
+        - "10.1.0.0/24"
+        - "10.2.0.0/24"
     - port: 443
       allow: true
+      subnet:
+        - "10.1.0.0/24"
+        - "10.2.0.0/24"
     - port: 8080
       forward: 443
-mysql:
-  ports:
-    - port: 3306
-      allow: false
 openvpn:
   ports:
     - port: 1194
       protocol: udp
       allow: true
-      subnet:
-        - "10.7.0.0/24"
-        - "10.8.0.0/24"
