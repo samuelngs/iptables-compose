@@ -42,7 +42,7 @@ iptables -P FORWARD DROP
 iptables -P INPUT DROP
 iptables -P OUTPUT ACCEPT
 iptables -I INPUT -p udp -m udp --dport 1194 -j ACCEPT
-iptables -I INPUT -s 10.1.0.0/24 -s 10.2.0.0/24 -p tcp -m tcp --dport 80 -j ACCEPT
-iptables -I INPUT -s 10.1.0.0/24 -s 10.2.0.0/24 -p tcp -m tcp --dport 443 -j ACCEPT
+iptables -I INPUT -s 10.1.0.0/24,10.2.0.0/24 -p tcp -m tcp --dport 80 -j ACCEPT
+iptables -I INPUT -s 10.1.0.0/24,10.2.0.0/24 -p tcp -m tcp --dport 443 -j ACCEPT
 iptables -t nat -A PREROUTING -p tcp -m tcp --dport 8080 -j REDIRECT --to-port 443
 ```
