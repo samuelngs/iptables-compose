@@ -234,9 +234,14 @@ fn parse_port_item(doc: &Yaml) {
             }
             match doc["subnet"] {
                 Yaml::Array(ref v) => {
+                    cmd.push_str(" -s ");
+                    let mut y: i32 = 0;
                     for x in v {
-                        cmd.push_str(" -s ");
+                        if y > 0 {
+                            cmd.push_str(",");
+                        }
                         cmd.push_str(x.as_str().unwrap_or("0.0.0.0/0"));
+                        y += 1;
                     }
                 },
                 _ => {}
