@@ -203,6 +203,7 @@ fn parse_port_item(doc: &Yaml) {
         &Yaml::Hash(_) => {
             if doc["port"].is_badvalue() {
                 println!("Port is not defined");
+                exit(1);
             }
             let port = doc["port"].as_i64();
             match port {
